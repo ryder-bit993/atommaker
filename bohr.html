@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bohr Model Atom Generator</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              900: '#0c4a6e',
+            },
+            proton: '#ef4444',
+            neutron: '#3b82f6',
+            electron: '#00f2fe',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-mono {
+      font-family: 'Fira Code', monospace;
+    }
+    /* Custom glow effects */
+    .glow-electron {
+      box-shadow: 0 0 12px #00f2fe, 0 0 20px #00f2fe;
+    }
+    .glow-proton {
+      box-shadow: 0 0 10px #ef4444;
+    }
+    .glow-neutron {
+      box-shadow: 0 0 10px #3b82f6;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col bg-slate-950 text-slate-100 overflow-x-hidden selection:bg-cyan-500 selection:text-slate-950">
+
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-30 px-4 py-3 sm:px-6">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-slate-950 font-bold text-xl shadow-lg shadow-cyan-500/20">
+          <i class="fa-solid fa-atom text-white"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight tracking-wide bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent">
+            Bohr Atom Visualizer
+          </h1>
+          <p class="text-xs text-slate-400">Interactive Atomic Model Generator</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <button id="downloadPngBtn" class="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 rounded-lg border border-slate-700 transition-all shadow-sm">
+          <i class="fa-solid fa-download text-cyan-400"></i>
+          <span>Export PNG</span>
+        </button>
+        <button id="downloadSvgBtn" class="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-700 text-slate-950 font-semibold rounded-lg transition-all shadow-md shadow-cyan-500/20">
+          <i class="fa-solid fa-file-code"></i>
+          <span>Export SVG</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- LEFT PANEL: Controls & Settings (4 Cols) -->
+    <section class="lg:col-span-4 flex flex-col gap-5">
+      
+      <!-- Presets Card -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl backdrop-blur-sm">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-list-check"></i> Element Presets
+        </h2>
+        <div class="grid grid-cols-2 gap-2">
+          <select id="presetSelect" class="col-span-2 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer">
+            <option value="" disabled selected>-- Select an Element --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Particle Counters Card -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl backdrop-blur-sm flex flex-col gap-5">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+          <i class="fa-solid fa-sliders"></i> Subatomic Particles
+        </h2>
+
+        <!-- Protons Slider -->
+        <div class="space-y-1.5">
+          <div class="flex justify-between items-center text-xs">
+            <label for="protonsInput" class="font-medium text-red-400 flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Protons (p⁺)
+            </label>
+            <span id="protonsVal" class="font-mono text-sm font-bold text-red-400 bg-red-950/40 px-2 py-0.5 rounded border border-red-900/50">1</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <input type="range" id="protonsInput" min="1" max="118" value="1" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-500">
+            <div class="flex flex-col gap-0.5">
+              <button data-target="protonsInput" data-dir="1" class="step-btn px-1.5 py-0.5 text-xs bg-slate-800 hover:bg-slate-700 rounded text-slate-300">+</button>
+              <button data-target="protonsInput" data-dir="-1" class="step-btn px-1.5 py-0.5 text-xs bg-slate-800 hover:bg-slate-700 rounded text-slate-300">-</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Neutrons Slider -->
+        <div class="space-y-1.5">
+          <div class="flex justify-between items-center text-xs">
+            <label for="neutronsInput" class="font-medium text-blue-400 flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span> Neutrons (n⁰)
+            </label>
+            <span id="neutronsVal" class="font-mono text-sm font-bold text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/50">0</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <input type="range" id="neutronsInput" min="0" max="180" value="0" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500">
+            <div class="flex flex-col gap-0.5">
+              <button data-target="neutronsInput" data-dir="1" class="step-btn px-1.5 py-0.5 text-xs bg-slate-800 hover:bg-slate-700 rounded text-slate-300">+</button>
+              <button data-target="neutronsInput" data-dir="-1" class="step-btn px-1.5 py-0.5 text-xs bg-slate-800 hover:bg-slate-700 rounded text-slate-300">-</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Electrons Slider -->
+        <div class="space-y-1.5">
+          <div class="flex justify-between items-center text-xs">
+            <label for="electronsInput" class="font-medium text-cyan-400 flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block"></span> Electrons (e⁻)
+            </label>
+            <span id="electronsVal" class="font-mono text-sm font-bold text-cyan-400 bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-900/50">1</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <input type="range" id="electronsInput" min="0" max="118" value="1" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+            <div class="flex flex-col gap-0.5">
+              <button data-target="electronsInput" data-dir="1" class="step-btn px-1.5 py-0.5 text-xs bg-slate-800 hover:bg-slate-700 rounded text-slate-300">+</button>
+              <button data-target="electronsInput" data-dir="-1" class="step-btn px-1.5 py-0.5 text-xs bg-slate-800 hover:bg-slate-700 rounded text-slate-300">-</button>
+            </div>
+          </div>
+        </div>
+
+        <button id="matchElectronsBtn" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 rounded-lg border border-slate-700 transition-colors flex items-center justify-center gap-2">
+          <i class="fa-solid fa-arrows-rotate"></i> Match Electrons to Protons (Neutral Atom)
+        </button>
+      </div>
+
+      <!-- Visualization Options Card -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl backdrop-blur-sm space-y-3">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+          <i class="fa-solid fa-gears"></i> Visual Settings
+        </h2>
+        
+        <div class="grid grid-cols-1 gap-3 text-xs">
+          <!-- Animation Toggle -->
+          <label class="flex items-center justify-between p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-all">
+            <span class="font-medium text-slate-300 flex items-center gap-2">
+              <i class="fa-solid fa-rotate text-cyan-400"></i> Orbit Rotation
+            </span>
+            <input type="checkbox" id="animateToggle" checked class="w-4 h-4 rounded text-cyan-500 bg-slate-900 border-slate-700 focus:ring-cyan-500">
+          </label>
+
+          <!-- Nucleus Style Toggle -->
+          <label class="flex items-center justify-between p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-all">
+            <span class="font-medium text-slate-300 flex items-center gap-2">
+              <i class="fa-solid fa-circle-nodes text-indigo-400"></i> Cluster Nucleus View
+            </span>
+            <input type="checkbox" id="clusterToggle" checked class="w-4 h-4 rounded text-cyan-500 bg-slate-900 border-slate-700 focus:ring-cyan-500">
+          </label>
+
+          <!-- Shell Label Toggle -->
+          <label class="flex items-center justify-between p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-all">
+            <span class="font-medium text-slate-300 flex items-center gap-2">
+              <i class="fa-solid fa-tag text-emerald-400"></i> Shell Labels (K, L, M...)
+            </span>
+            <input type="checkbox" id="shellLabelToggle" checked class="w-4 h-4 rounded text-cyan-500 bg-slate-900 border-slate-700 focus:ring-cyan-500">
+          </label>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- CENTER & RIGHT PANEL: Visualizer & Info Card (8 Cols) -->
+    <section class="lg:col-span-8 flex flex-col gap-5">
+      
+      <!-- Atomic Overview Tile -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl backdrop-blur-sm grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+        <div class="p-3 bg-slate-950/50 rounded-xl border border-slate-800/60">
+          <div class="text-2xl font-black text-cyan-400 font-mono" id="elemSymbol">H</div>
+          <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 mt-1" id="elemName">Hydrogen</div>
+        </div>
+        
+        <div class="p-3 bg-slate-950/50 rounded-xl border border-slate-800/60">
+          <div class="text-xl font-bold text-slate-200 font-mono" id="atomicNumDisplay">1</div>
+          <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 mt-1">Atomic No. (Z)</div>
+        </div>
+
+        <div class="p-3 bg-slate-950/50 rounded-xl border border-slate-800/60">
+          <div class="text-xl font-bold text-slate-200 font-mono" id="atomicMassDisplay">1</div>
+          <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 mt-1">Mass No. (A)</div>
+        </div>
+
+        <div class="p-3 bg-slate-950/50 rounded-xl border border-slate-800/60 flex flex-col justify-center items-center">
+          <div class="text-sm font-bold font-mono px-2.5 py-1 rounded-full inline-block" id="chargeBadge">Neutral</div>
+          <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 mt-1">Charge State</div>
+        </div>
+      </div>
+
+      <!-- Main Bohr Canvas Wrapper -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl backdrop-blur-sm flex flex-col items-center justify-center relative min-h-[440px] sm:min-h-[520px] overflow-hidden">
+        
+        <!-- Interactive Canvas -->
+        <canvas id="bohrCanvas" class="w-full max-w-[550px] aspect-square block cursor-crosshair rounded-xl"></canvas>
+
+        <!-- Hidden canvas for PNG export rendering -->
+        <canvas id="exportCanvas" class="hidden"></canvas>
+
+        <!-- Shell configuration pill overlay -->
+        <div class="absolute bottom-4 left-4 right-4 sm:left-6 sm:right-6 bg-slate-950/80 border border-slate-800 backdrop-blur-md rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400 font-semibold">Configuration:</span>
+            <span id="shellConfigDisplay" class="font-mono text-cyan-300 font-bold bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-900/50">2, 8, 18</span>
+          </div>
+          <div class="flex items-center gap-4 text-slate-400 text-[11px]">
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500"></span> Protons</span>
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Neutrons</span>
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400"></span> Electrons</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    // --- Periodic Table Reference Data ---
+    const PERIODIC_TABLE = [
+      { z: 1, symbol: "H", name: "Hydrogen", mass: 1 },
+      { z: 2, symbol: "He", name: "Helium", mass: 4 },
+      { z: 3, symbol: "Li", name: "Lithium", mass: 7 },
+      { z: 4, symbol: "Be", name: "Beryllium", mass: 9 },
+      { z: 5, symbol: "B", name: "Boron", mass: 11 },
+      { z: 6, symbol: "C", name: "Carbon", mass: 12 },
+      { z: 7, symbol: "N", name: "Nitrogen", mass: 14 },
+      { z: 8, symbol: "O", name: "Oxygen", mass: 16 },
+      { z: 9, symbol: "F", name: "Fluorine", mass: 19 },
+      { z: 10, symbol: "Ne", name: "Neon", mass: 20 },
+      { z: 11, symbol: "Na", name: "Sodium", mass: 23 },
+      { z: 12, symbol: "Mg", name: "Magnesium", mass: 24 },
+      { z: 13, symbol: "Al", name: "Aluminium", mass: 27 },
+      { z: 14, symbol: "Si", name: "Silicon", mass: 28 },
+      { z: 15, symbol: "P", name: "Phosphorus", mass: 31 },
+      { z: 16, symbol: "S", name: "Sulfur", mass: 32 },
+      { z: 17, symbol: "Cl", name: "Chlorine", mass: 35 },
+      { z: 18, symbol: "Ar", name: "Argon", mass: 40 },
+      { z: 19, symbol: "K", name: "Potassium", mass: 39 },
+      { z: 20, symbol: "Ca", name: "Calcium", mass: 40 },
+      { z: 26, symbol: "Fe", name: "Iron", mass: 56 },
+      { z: 29, symbol: "Cu", name: "Copper", mass: 64 },
+      { z: 35, symbol: "Br", name: "Bromine", mass: 80 },
+      { z: 47, symbol: "Ag", name: "Silver", mass: 108 },
+      { z: 79, symbol: "Au", name: "Gold", mass: 197 },
+      { z: 80, symbol: "Hg", name: "Mercury", mass: 201 },
+      { z: 92, symbol: "U", name: "Uranium", mass: 238 }
+    ];
+
+    // Standard maximum capacities per shell (n=1, n=2, ...)
+    const SHELL_CAPACITIES = [2, 8, 18, 32, 50, 72];
+    const SHELL_NAMES = ['K', 'L', 'M', 'N', 'O', 'P'];
+
+    // State Variables
+    let state = {
+      protons: 6,
+      neutrons: 6,
+      electrons: 6,
+      animate: true,
+      clusterView: true,
+      showShellLabels: true,
+      rotationAngle: 0
+    };
+
+    // DOM Elements
+    const canvas = document.getElementById('bohrCanvas');
+    const ctx = canvas.getContext('2d');
+    const protonsInput = document.getElementById('protonsInput');
+    const neutronsInput = document.getElementById('neutronsInput');
+    const electronsInput = document.getElementById('electronsInput');
+    const protonsVal = document.getElementById('protonsVal');
+    const neutronsVal = document.getElementById('neutronsVal');
+    const electronsVal = document.getElementById('electronsVal');
+    const elemSymbol = document.getElementById('elemSymbol');
+    const elemName = document.getElementById('elemName');
+    const atomicNumDisplay = document.getElementById('atomicNumDisplay');
+    const atomicMassDisplay = document.getElementById('atomicMassDisplay');
+    const chargeBadge = document.getElementById('chargeBadge');
+    const shellConfigDisplay = document.getElementById('shellConfigDisplay');
+    const presetSelect = document.getElementById('presetSelect');
+    const animateToggle = document.getElementById('animateToggle');
+    const clusterToggle = document.getElementById('clusterToggle');
+    const shellLabelToggle = document.getElementById('shellLabelToggle');
+
+    function initPresets() {
+      PERIODIC_TABLE.forEach(elem => {
+        const opt = document.createElement('option');
+        opt.value = elem.z;
+        opt.textContent = `${elem.z}. ${elem.name} (${elem.symbol})`;
+        presetSelect.appendChild(opt);
+      });
+    }
+
+    function calculateShellDistribution(numElectrons) {
+      const shells = [];
+      let remaining = numElectrons;
+
+      for (let cap of SHELL_CAPACITIES) {
+        if (remaining <= 0) break;
+        const count = Math.min(remaining, cap);
+        shells.push(count);
+        remaining -= count;
+      }
+      return shells;
+    }
+
+    function getElementData(protons) {
+      const match = PERIODIC_TABLE.find(e => e.z === protons);
+      if (match) return match;
+      return {
+        z: protons,
+        symbol: `E${protons}`,
+        name: `Element ${protons}`,
+        mass: protons + state.neutrons
+      };
+    }
+
+    function updateStateFromInputs() {
+      state.protons = parseInt(protonsInput.value);
+      state.neutrons = parseInt(neutronsInput.value);
+      state.electrons = parseInt(electronsInput.value);
+
+      protonsVal.textContent = state.protons;
+      neutronsVal.textContent = state.neutrons;
+      electronsVal.textContent = state.electrons;
+
+      // Update element info
+      const elem = getElementData(state.protons);
+      elemSymbol.textContent = elem.symbol;
+      elemName.textContent = elem.name;
+      atomicNumDisplay.textContent = state.protons;
+      atomicMassDisplay.textContent = state.protons + state.neutrons;
+
+      // Charge State
+      const netCharge = state.protons - state.electrons;
+      if (netCharge === 0) {
+        chargeBadge.textContent = "Neutral";
+        chargeBadge.className = "text-sm font-bold font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/60";
+      } else if (netCharge > 0) {
+        chargeBadge.textContent = `Cation (+${netCharge})`;
+        chargeBadge.className = "text-sm font-bold font-mono px-2.5 py-0.5 rounded-full bg-red-950/60 text-red-400 border border-red-800/60";
+      } else {
+        chargeBadge.textContent = `Anion (${netCharge})`;
+        chargeBadge.className = "text-sm font-bold font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/60 text-cyan-400 border border-cyan-800/60";
+      }
+
+      // Shell configuration string
+      const shells = calculateShellDistribution(state.electrons);
+      shellConfigDisplay.textContent = shells.length > 0 ? shells.join(' - ') : '0';
+    }
+
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+    }
+
+    // Deterministic pseudo-random numbers for cluster layout stability
+    function seededRandom(seed) {
+      const x = Math.sin(seed++) * 10000;
+      return x - Math.floor(x);
+    }
+
+    function renderBohrModel(targetCtx, width, height) {
+      const center = { x: width / 2, y: height / 2 };
+      const shells = calculateShellDistribution(state.electrons);
+      const totalShells = Math.max(shells.length, 1);
+
+      // Scale dynamically so larger atoms fit canvas seamlessly
+      const maxRadius = Math.min(width, height) * 0.42;
+      const minRadius = 40;
+      const radiusStep = totalShells > 1 ? (maxRadius - minRadius) / totalShells : 0;
+
+      // Clear canvas
+      targetCtx.clearRect(0, 0, width, height);
+
+      // --- 1. DRAW NUCLEUS ---
+      const nucleusRadius = Math.min(32 + Math.sqrt(state.protons + state.neutrons) * 2.2, minRadius - 5);
+
+      if (state.clusterView && (state.protons + state.neutrons) <= 120) {
+        // Render 3D-ish sphere cluster for nucleus
+        const totalParticles = state.protons + state.neutrons;
+        const particles = [];
+        
+        // Build list of particle types
+        for (let i = 0; i < state.protons; i++) particles.push('#ef4444');
+        for (let i = 0; i < state.neutrons; i++) particles.push('#3b82f6');
+
+        // Draw individual spheres using deterministic spiral/cluster layout
+        particles.forEach((color, i) => {
+          const r = (i === 0) ? 0 : Math.sqrt(i) * (nucleusRadius / Math.sqrt(totalParticles)) * 0.85;
+          const theta = i * 2.39996; // Golden angle ratio
+          
+          const px = center.x + r * Math.cos(theta);
+          const py = center.y + r * Math.sin(theta);
+          const particleRadius = Math.max(3, Math.min(7, 40 / Math.sqrt(totalParticles)));
+
+          targetCtx.beginPath();
+          targetCtx.arc(px, py, particleRadius, 0, Math.PI * 2);
+          
+          // Radial gradient for 3D sphere look
+          const grad = targetCtx.createRadialGradient(
+            px - particleRadius * 0.3, py - particleRadius * 0.3, particleRadius * 0.1,
+            px, py, particleRadius
+          );
+          grad.addColorStop(0, '#ffffff');
+          grad.addColorStop(0.4, color);
+          grad.addColorStop(1, '#0f172a');
+
+          targetCtx.fillStyle = grad;
+          targetCtx.fill();
+        });
+
+        // Glowing border ring
+        targetCtx.beginPath();
+        targetCtx.arc(center.x, center.y, nucleusRadius, 0, Math.PI * 2);
+        targetCtx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        targetCtx.lineWidth = 1.5;
+        targetCtx.stroke();
+
+      } else {
+        // Simple Clean Text-based Nucleus
+        targetCtx.beginPath();
+        targetCtx.arc(center.x, center.y, nucleusRadius, 0, Math.PI * 2);
+        const grad = targetCtx.createRadialGradient(center.x, center.y, 5, center.x, center.y, nucleusRadius);
+        grad.addColorStop(0, '#1e293b');
+        grad.addColorStop(1, '#0f172a');
+        targetCtx.fillStyle = grad;
+        targetCtx.fill();
+        targetCtx.strokeStyle = '#38bdf8';
+        targetCtx.lineWidth = 2;
+        targetCtx.stroke();
+
+        // Nucleus Text
+        targetCtx.fillStyle = '#f87171';
+        targetCtx.font = 'bold 12px Inter, sans-serif';
+        targetCtx.textAlign = 'center';
+        targetCtx.textBaseline = 'middle';
+        targetCtx.fillText(`${state.protons} p⁺`, center.x, center.y - 7);
+
+        targetCtx.fillStyle = '#60a5fa';
+        targetCtx.fillText(`${state.neutrons} n⁰`, center.x, center.y + 7);
+      }
+
+      // --- 2. DRAW ELECTRON SHELLS & ELECTRONS ---
+      shells.forEach((count, sIndex) => {
+        const orbitRadius = minRadius + (sIndex + 1) * radiusStep;
+
+        // Orbit Circle
+        targetCtx.beginPath();
+        targetCtx.arc(center.x, center.y, orbitRadius, 0, Math.PI * 2);
+        targetCtx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+        targetCtx.lineWidth = 1.5;
+        targetCtx.setLineDash([4, 4]);
+        targetCtx.stroke();
+        targetCtx.setLineDash([]);
+
+        // Shell Label (K, L, M...)
+        if (state.showShellLabels) {
+          const labelName = `${SHELL_NAMES[sIndex] || `n=${sIndex+1}`} (${count})`;
+          targetCtx.fillStyle = 'rgba(148, 163, 184, 0.6)';
+          targetCtx.font = '10px Fira Code, monospace';
+          targetCtx.textAlign = 'left';
+          targetCtx.fillText(labelName, center.x + 5, center.y - orbitRadius - 4);
+        }
+
+        // Draw Electrons along the orbit
+        const direction = (sIndex % 2 === 0) ? 1 : -1; // Alternate orbital rotation directions
+        const speedMultiplier = 1 / (sIndex + 1); // Inner shells orbit faster
+        const currentAngle = state.rotationAngle * speedMultiplier * direction;
+
+        for (let eIndex = 0; eIndex < count; eIndex++) {
+          const baseAngle = (2 * Math.PI / count) * eIndex;
+          const angle = baseAngle + currentAngle;
+
+          const ex = center.x + orbitRadius * Math.cos(angle);
+          const ey = center.y + orbitRadius * Math.sin(angle);
+          const electronRadius = 5;
+
+          // Outer Glow
+          targetCtx.beginPath();
+          targetCtx.arc(ex, ey, electronRadius + 3, 0, Math.PI * 2);
+          targetCtx.fillStyle = 'rgba(0, 242, 254, 0.25)';
+          targetCtx.fill();
+
+          // Electron Core
+          targetCtx.beginPath();
+          targetCtx.arc(ex, ey, electronRadius, 0, Math.PI * 2);
+          const eGrad = targetCtx.createRadialGradient(ex - 1, ey - 1, 1, ex, ey, electronRadius);
+          eGrad.addColorStop(0, '#ffffff');
+          eGrad.addColorStop(0.5, '#00f2fe');
+          eGrad.addColorStop(1, '#0284c7');
+          targetCtx.fillStyle = eGrad;
+          targetCtx.fill();
+        }
+      });
+    }
+
+    function animate() {
+      if (state.animate) {
+        state.rotationAngle += 0.008;
+      }
+      const rect = canvas.getBoundingClientRect();
+      renderBohrModel(ctx, rect.width, rect.height);
+      requestAnimationFrame(animate);
+    }
+
+    // Event Listeners for Particle Inputs
+    [protonsInput, neutronsInput, electronsInput].forEach(input => {
+      input.addEventListener('input', () => {
+        updateStateFromInputs();
+      });
+    });
+
+    // Step +/- Button logic
+    document.querySelectorAll('.step-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-target');
+        const dir = parseInt(btn.getAttribute('data-dir'));
+        const targetInput = document.getElementById(targetId);
+        targetInput.value = Math.max(parseInt(targetInput.min), Math.min(parseInt(targetInput.max), parseInt(targetInput.value) + dir));
+        updateStateFromInputs();
+      });
+    });
+
+    // Match electrons to protons
+    document.getElementById('matchElectronsBtn').addEventListener('click', () => {
+      electronsInput.value = protonsInput.value;
+      updateStateFromInputs();
+    });
+
+    // Preset Selector Change
+    presetSelect.addEventListener('change', (e) => {
+      const z = parseInt(e.target.value);
+      const elem = PERIODIC_TABLE.find(item => item.z === z);
+      if (elem) {
+        protonsInput.value = elem.z;
+        neutronsInput.value = elem.mass - elem.z;
+        electronsInput.value = elem.z;
+        updateStateFromInputs();
+      }
+    });
+
+    // Visual Toggles
+    animateToggle.addEventListener('change', e => state.animate = e.target.checked);
+    clusterToggle.addEventListener('change', e => state.clusterView = e.target.checked);
+    shellLabelToggle.addEventListener('change', e => state.showShellLabels = e.target.checked);
+
+    // PNG Export Handler
+    document.getElementById('downloadPngBtn').addEventListener('click', () => {
+      const exportCanvas = document.getElementById('exportCanvas');
+      const exportCtx = exportCanvas.getContext('2d');
+      const exportSize = 1000; // High resolution square
+
+      exportCanvas.width = exportSize;
+      exportCanvas.height = exportSize;
+
+      // Dark background fill
+      exportCtx.fillStyle = '#090d16';
+      exportCtx.fillRect(0, 0, exportSize, exportSize);
+
+      // Render atom
+      renderBohrModel(exportCtx, exportSize, exportSize);
+
+      // Add branding watermark header
+      const elem = getElementData(state.protons);
+      exportCtx.fillStyle = '#ffffff';
+      exportCtx.font = 'bold 32px Inter, sans-serif';
+      exportCtx.fillText(`${elem.name} (${elem.symbol})`, 40, 60);
+
+      exportCtx.fillStyle = '#38bdf8';
+      exportCtx.font = '20px Fira Code, monospace';
+      exportCtx.fillText(`Protons: ${state.protons}  |  Neutrons: ${state.neutrons}  |  Electrons: ${state.electrons}`, 40, 95);
+
+      // Download trigger
+      const link = document.createElement('a');
+      link.download = `bohr-model-${elem.name.toLowerCase()}.png`;
+      link.href = exportCanvas.toDataURL('image/png');
+      link.click();
+    });
+
+    // SVG Export Handler
+    document.getElementById('downloadSvgBtn').addEventListener('click', () => {
+      const size = 800;
+      const center = size / 2;
+      const shells = calculateShellDistribution(state.electrons);
+      const elem = getElementData(state.protons);
+      const maxRadius = size * 0.42;
+      const minRadius = 60;
+      const radiusStep = shells.length > 1 ? (maxRadius - minRadius) / shells.length : 0;
+
+      let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+  <rect width="100%" height="100%" fill="#090d16"/>
+  <text x="40" y="60" fill="#ffffff" font-family="sans-serif" font-size="28" font-weight="bold">${elem.name} (${elem.symbol})</text>
+  <text x="40" y="90" fill="#38bdf8" font-family="monospace" font-size="16">Protons: ${state.protons} | Neutrons: ${state.neutrons} | Electrons: ${state.electrons}</text>
+
+  <!-- Nucleus -->
+  <circle cx="${center}" cy="${center}" r="35" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+  <text x="${center}" y="${center - 6}" fill="#f87171" font-family="sans-serif" font-size="14" font-weight="bold" text-anchor="middle">${state.protons} p⁺</text>
+  <text x="${center}" y="${center + 12}" fill="#60a5fa" font-family="sans-serif" font-size="14" font-weight="bold" text-anchor="middle">${state.neutrons} n⁰</text>
+`;
+
+      // Draw Orbit Shells and Electrons in SVG
+      shells.forEach((count, sIndex) => {
+        const orbitRadius = minRadius + (sIndex + 1) * radiusStep;
+        
+        // Orbit ring
+        svgContent += `  <circle cx="${center}" cy="${center}" r="${orbitRadius}" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.4"/>\n`;
+
+        // Electrons
+        for (let eIndex = 0; eIndex < count; eIndex++) {
+          const angle = (2 * Math.PI / count) * eIndex;
+          const ex = center + orbitRadius * Math.cos(angle);
+          const ey = center + orbitRadius * Math.sin(angle);
+          svgContent += `  <circle cx="${ex}" cy="${ey}" r="6" fill="#00f2fe" stroke="#ffffff" stroke-width="1"/>\n`;
+        }
+      });
+
+      svgContent += `</svg>`;
+
+      // Blob download
+      const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = `bohr-model-${elem.name.toLowerCase()}.svg`;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    window.addEventListener('load', () => {
+      initPresets();
+      resizeCanvas();
+      updateStateFromInputs();
+      animate();
+    });
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+    });
+  </script>
+</body>
+</html>
