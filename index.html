@@ -102,19 +102,23 @@
     <!-- LEFT PANEL: Controls & Settings (4 Cols) -->
     <section class="lg:col-span-4 flex flex-col gap-5">
       
-      <!-- Presets Card -->
+      <!-- Quick Element Presets -->
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl backdrop-blur-sm">
         <h2 class="text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-3 flex items-center gap-2">
-          <i class="fa-solid fa-list-check"></i> Element Presets
+          <i class="fa-solid fa-list-check"></i> Quick Element Presets
         </h2>
-        <div class="grid grid-cols-2 gap-2">
-          <select id="presetSelect" class="col-span-2 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer">
-            <option value="" disabled selected>-- Select an Element --</option>
-          </select>
+        <div class="flex flex-wrap gap-2 mb-3">
+          <button data-z="1" class="preset-btn px-2.5 py-1 text-xs bg-slate-800 hover:bg-cyan-950 hover:text-cyan-400 border border-slate-700 rounded-lg transition-all">Hydrogen (H)</button>
+          <button data-z="6" class="preset-btn px-2.5 py-1 text-xs bg-slate-800 hover:bg-cyan-950 hover:text-cyan-400 border border-slate-700 rounded-lg transition-all">Carbon (C)</button>
+          <button data-z="8" class="preset-btn px-2.5 py-1 text-xs bg-slate-800 hover:bg-cyan-950 hover:text-cyan-400 border border-slate-700 rounded-lg transition-all">Oxygen (O)</button>
+          <button data-z="79" class="preset-btn px-2.5 py-1 text-xs bg-slate-800 hover:bg-cyan-950 hover:text-cyan-400 border border-slate-700 rounded-lg transition-all">Gold (Au)</button>
         </div>
+        <select id="presetSelect" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer">
+          <option value="" disabled selected>-- Select an Element --</option>
+        </select>
       </div>
 
-      <!-- Particle Counters Card -->
+      <!-- Particle Sliders Card -->
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl backdrop-blur-sm flex flex-col gap-5">
         <h2 class="text-xs font-semibold uppercase tracking-wider text-cyan-400 flex items-center gap-2">
           <i class="fa-solid fa-sliders"></i> Subatomic Particles
@@ -176,7 +180,7 @@
         </button>
       </div>
 
-      <!-- Visualization Options Card -->
+      <!-- Visual Toggles -->
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl backdrop-blur-sm space-y-3">
         <h2 class="text-xs font-semibold uppercase tracking-wider text-cyan-400 flex items-center gap-2">
           <i class="fa-solid fa-gears"></i> Visual Settings
@@ -250,7 +254,7 @@
         <div class="absolute bottom-4 left-4 right-4 sm:left-6 sm:right-6 bg-slate-950/80 border border-slate-800 backdrop-blur-md rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
           <div class="flex items-center gap-2">
             <span class="text-slate-400 font-semibold">Configuration:</span>
-            <span id="shellConfigDisplay" class="font-mono text-cyan-300 font-bold bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-900/50">2, 8, 18</span>
+            <span id="shellConfigDisplay" class="font-mono text-cyan-300 font-bold bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-900/50">1</span>
           </div>
           <div class="flex items-center gap-4 text-slate-400 text-[11px]">
             <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500"></span> Protons</span>
@@ -301,9 +305,9 @@
 
     // State Variables
     let state = {
-      protons: 6,
-      neutrons: 6,
-      electrons: 6,
+      protons: 1,
+      neutrons: 0,
+      electrons: 1,
       animate: true,
       clusterView: true,
       showShellLabels: true,
@@ -405,12 +409,6 @@
       ctx.scale(dpr, dpr);
     }
 
-    // Deterministic pseudo-random numbers for cluster layout stability
-    function seededRandom(seed) {
-      const x = Math.sin(seed++) * 10000;
-      return x - Math.floor(x);
-    }
-
     function renderBohrModel(targetCtx, width, height) {
       const center = { x: width / 2, y: height / 2 };
       const shells = calculateShellDistribution(state.electrons);
@@ -428,7 +426,7 @@
       const nucleusRadius = Math.min(32 + Math.sqrt(state.protons + state.neutrons) * 2.2, minRadius - 5);
 
       if (state.clusterView && (state.protons + state.neutrons) <= 120) {
-        // Render 3D-ish sphere cluster for nucleus
+        // Render 3D sphere cluster for nucleus
         const totalParticles = state.protons + state.neutrons;
         const particles = [];
         
@@ -577,6 +575,15 @@
     document.getElementById('matchElectronsBtn').addEventListener('click', () => {
       electronsInput.value = protonsInput.value;
       updateStateFromInputs();
+    });
+
+    // Quick Preset Buttons
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const z = parseInt(btn.getAttribute('data-z'));
+        presetSelect.value = z;
+        presetSelect.dispatchEvent(new Event('change'));
+      });
     });
 
     // Preset Selector Change
