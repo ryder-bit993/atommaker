@@ -1,2 +1,2 @@
-# atommaker
-Makes a diagram of atoms
+# Atom Visualizer
+This visualizes atoms. THIS CODE WAS MADE BY AI. I DON'T PROMOTE HARMFUL USE OF AI BUT I BELIEVE AI CAN BE HELPFUL FOR THINGS SUCH AS THIS.
